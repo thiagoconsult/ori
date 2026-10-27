@@ -1,1 +1,1 @@
-mod vos;
+pub mod vos;

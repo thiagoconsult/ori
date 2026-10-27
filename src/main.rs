@@ -3,9 +3,9 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
+use oir::vos;
 use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
-mod vos;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -25,7 +25,7 @@ fn severity_from_str(severity: &str) -> Result<Severity, String> {
 }
 
 #[derive(Deserialize)]
-struct CreateOri {
+struct CreateOir {
     asset_id: String,
     description: String,
     severity: String,
@@ -33,20 +33,20 @@ struct CreateOri {
 }
 
 #[derive(Serialize)]
-struct Ori {
+struct Oir {
     asset_id: vos::AssetId,
     description: vos::Description,
     severity: Severity,
     reported_by: vos::ReportedBy,
 }
-impl Ori {
+impl Oir {
     fn new(
         asset_id: &str,
         description: &str,
         severity: &str,
         reported_by: &Option<String>,
     ) -> Result<Self, String> {
-        let asset_id_in = vos::AssetId::new(asset_id)?;
+        let asset_id_in = vos::AssetId::try_from(asset_id)?;
         let severity_in = severity_from_str(severity)?;
         let description_in = vos::Description::new(description)?;
         let reported_by_in = vos::ReportedBy::new(reported_by);
@@ -64,7 +64,7 @@ impl Ori {
 async fn main() {
     let app = Router::new()
         .route("/", get(root))
-        .route("/ori", post(create_ori));
+        .route("/oir", post(create_oir));
 
     let listener = match TcpListener::bind("127.0.0.1:3000").await {
         Ok(l) => l,
@@ -84,10 +84,10 @@ async fn root() -> &'static str {
     "ORI Running..."
 }
 
-async fn create_ori(
-    Json(payload): Json<CreateOri>,
-) -> Result<(StatusCode, Json<Ori>), (StatusCode, String)> {
-    let ori = Ori::new(
+async fn create_oir(
+    Json(payload): Json<CreateOir>,
+) -> Result<(StatusCode, Json<Oir>), (StatusCode, String)> {
+    let ori = Oir::new(
         &payload.asset_id,
         &payload.description,
         &payload.severity,

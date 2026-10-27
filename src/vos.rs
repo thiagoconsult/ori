@@ -16,8 +16,10 @@ impl Description {
 
 #[derive(Serialize)]
 pub struct AssetId(String);
-impl AssetId {
-    pub fn new(value: &str) -> Result<Self, String> {
+impl TryFrom<&str> for AssetId {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         let value_in = value.trim();
 
         if value_in.is_empty() || value_in.chars().count() < 5 {
@@ -29,6 +31,7 @@ impl AssetId {
 }
 
 #[derive(Serialize)]
+#[serde(transparent)]
 pub struct ReportedBy {
     value: String,
 }
